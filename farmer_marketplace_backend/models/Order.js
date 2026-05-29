@@ -18,6 +18,7 @@ const OrderSchema = new mongoose.Schema({
     default: 'pending'
   },
   deliveryAddress: { type: String, required: true },
+  receiptUrl: { type: String, required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', OrderSchema);

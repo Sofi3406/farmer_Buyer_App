@@ -23,7 +23,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _quantityController = TextEditingController();
   final _descController = TextEditingController();
   final _farmerNameController = TextEditingController();
-  final _accountController = TextEditingController();
+  final _accountNumberController = TextEditingController();
+  final _accountHolderController = TextEditingController();
   final _phoneController = TextEditingController();
   String? _location;
   List<String> _imageUrls = [];
@@ -34,7 +35,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   @override
   void initState() {
     super.initState();
-    _accountController.text = 'CBE 1000212203 Sofiya';
+    _accountNumberController.text = '1000100100100 CBE';
+    _accountHolderController.text = 'FarmConnect';
     _phoneController.text = '+251930670088';
   }
 
@@ -45,7 +47,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _quantityController.dispose();
     _descController.dispose();
     _farmerNameController.dispose();
-    _accountController.dispose();
+    _accountNumberController.dispose();
+    _accountHolderController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -61,15 +64,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
       });
       // Convert XFile list to paths
       final paths = images.map((x) => x.path).toList();
-      final resp = await ApiService.uploadImages(paths, onProgress: (index, sent, total) {
-        if (mounted) {
-          setState(() {
-            _uploadProgress[index] = total > 0 ? sent / total : 0;
-          });
-        }
-      });
+      final resp = await ApiService.uploadImages(
+        paths,
+        onProgress: (index, sent, total) {
+          if (mounted) {
+            setState(() {
+              _uploadProgress[index] = total > 0 ? sent / total : 0;
+            });
+          }
+        },
+      );
       // Expecting { urls: [...] } from backend
-        final List<String> urls = (resp is Map && resp['urls'] is List)
+      final List<String> urls = (resp is Map && resp['urls'] is List)
           ? List<String>.from(resp['urls'] as List)
           : <String>[];
       setState(() {
@@ -80,7 +86,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Image upload failed: $e')));
       }
     } finally {
       setState(() {
@@ -112,14 +120,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _accountController,
-              decoration: const InputDecoration(labelText: 'Account Number (CBE)'),
+              controller: _accountNumberController,
+              decoration: const InputDecoration(
+                labelText: 'Account Number (CBE)',
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _accountHolderController,
+              decoration: const InputDecoration(
+                labelText: 'Account Holder Name',
+              ),
               keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Telebirr Phone Number'),
+              decoration: const InputDecoration(
+                labelText: 'Telebirr Phone Number',
+              ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 12),
@@ -131,21 +151,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _priceController,
-              decoration: const InputDecoration(labelText: 'Price per kg (ETB)'),
+              decoration: const InputDecoration(
+                labelText: 'Price per kg (ETB)',
+              ),
               keyboardType: TextInputType.number,
-              validator: (v) => v == null || double.tryParse(v) == null ? 'Enter valid price' : null,
+              validator: (v) => v == null || double.tryParse(v) == null
+                  ? 'Enter valid price'
+                  : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _quantityController,
-              decoration: const InputDecoration(labelText: 'Available Quantity'),
+              decoration: const InputDecoration(
+                labelText: 'Available Quantity',
+              ),
               keyboardType: TextInputType.number,
-              validator: (v) => v == null || int.tryParse(v) == null ? 'Enter valid quantity' : null,
+              validator: (v) => v == null || int.tryParse(v) == null
+                  ? 'Enter valid quantity'
+                  : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _descController,
-              decoration: const InputDecoration(labelText: 'Description (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Description (optional)',
+              ),
               maxLines: 3,
             ),
             const SizedBox(height: 12),
@@ -154,9 +184,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ElevatedButton.icon(
               onPressed: _isUploading ? null : _pickImages,
               icon: const Icon(Icons.image),
-              label: Text(_isUploading
-                  ? 'Uploading...'
-                  : (_imageUrls.isEmpty ? 'Pick Images' : '${_imageUrls.length} images selected')),
+              label: Text(
+                _isUploading
+                    ? 'Uploading...'
+                    : (_imageUrls.isEmpty
+                          ? 'Pick Images'
+                          : '${_imageUrls.length} images selected'),
+              ),
             ),
             const SizedBox(height: 12),
             if (_selectedImages.isNotEmpty)
@@ -172,14 +206,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Container(
                           width: 80,
                           height: 80,
-                          decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                          child: Image.file(File(_selectedImages[i].path), fit: BoxFit.cover),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: Image.file(
+                            File(_selectedImages[i].path),
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         SizedBox(
                           width: 80,
                           child: LinearProgressIndicator(
-                            value: _uploadProgress.length > i ? _uploadProgress[i] : 0,
+                            value: _uploadProgress.length > i
+                                ? _uploadProgress[i]
+                                : 0,
                           ),
                         ),
                       ],
@@ -192,10 +233,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ? const LoadingIndicator()
                 : ElevatedButton(
                     onPressed: () async {
-                      if (_formKey.currentState!.validate() && _location != null) {
+                      if (_formKey.currentState!.validate() &&
+                          _location != null) {
                         final productData = {
                           'farmerName': _farmerNameController.text.trim(),
-                          'accountNumber': _accountController.text.trim(),
+                          'accountNumber': _accountNumberController.text.trim(),
+                          'accountHolderName': _accountHolderController.text
+                              .trim(),
                           'phone': _phoneController.text.trim(),
                           'name': _nameController.text.trim(),
                           'price': double.parse(_priceController.text),
@@ -207,13 +251,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         await productProvider.addProduct(productData);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Product added successfully')),
+                            const SnackBar(
+                              content: Text('Product added successfully'),
+                            ),
                           );
                           context.go('/farmer-products');
                         }
                       } else if (_location == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select a location')),
+                          const SnackBar(
+                            content: Text('Please select a location'),
+                          ),
                         );
                       }
                     },

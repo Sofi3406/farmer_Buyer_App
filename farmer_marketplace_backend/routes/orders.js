@@ -7,9 +7,12 @@ const roleCheck = require('../middleware/roleCheck');
 // Place an order (buyer)
 router.post('/', auth, roleCheck('buyer'), async (req, res) => {
   try {
-    const { items, totalAmount, deliveryAddress } = req.body;
+    const { items, totalAmount, deliveryAddress, receiptUrl } = req.body;
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
+    }
+    if (!receiptUrl) {
+      return res.status(400).json({ message: 'Receipt upload is required' });
     }
 
     // Validate each item, resolve its farmer, and ensure enough stock exists.
@@ -48,6 +51,7 @@ router.post('/', auth, roleCheck('buyer'), async (req, res) => {
         items: farmerOrder.items,
         totalAmount: farmerOrder.totalAmount,
         deliveryAddress,
+        receiptUrl,
         status: 'pending',
       });
       await order.save();

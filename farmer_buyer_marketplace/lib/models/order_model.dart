@@ -9,6 +9,7 @@ class Order {
   final OrderStatus status;
   final DateTime orderDate;
   final DateTime? deliveryDate;
+  final String? receiptUrl;
 
   Order({
     required this.id,
@@ -19,21 +20,27 @@ class Order {
     required this.status,
     required this.orderDate,
     this.deliveryDate,
+    this.receiptUrl,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
-        id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-        buyerId: json['buyerId']?.toString() ?? '',
-        farmerId: json['farmerId']?.toString() ?? '',
-        items: (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList(),
-        totalAmount: (json['totalAmount'] as num).toDouble(),
-        status: OrderStatus.values.firstWhere(
-          (e) => e.toString() == 'OrderStatus.${json['status']}',
-          orElse: () => OrderStatus.pending,
-        ),
-        orderDate: DateTime.parse((json['orderDate'] ?? json['createdAt']).toString()),
-        deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate'].toString()) : null,
-      );
+    id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+    buyerId: json['buyerId']?.toString() ?? '',
+    farmerId: json['farmerId']?.toString() ?? '',
+    items: (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList(),
+    totalAmount: (json['totalAmount'] as num).toDouble(),
+    status: OrderStatus.values.firstWhere(
+      (e) => e.toString() == 'OrderStatus.${json['status']}',
+      orElse: () => OrderStatus.pending,
+    ),
+    orderDate: DateTime.parse(
+      (json['orderDate'] ?? json['createdAt']).toString(),
+    ),
+    deliveryDate: json['deliveryDate'] != null
+        ? DateTime.parse(json['deliveryDate'].toString())
+        : null,
+    receiptUrl: json['receiptUrl']?.toString(),
+  );
 }
 
 class OrderItem {
@@ -50,9 +57,9 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) => OrderItem(
-      productId: json['productId']?.toString() ?? '',
-      productName: json['productName']?.toString() ?? '',
-      quantity: (json['quantity'] as num).toInt(),
-      price: (json['price'] as num).toDouble(),
-      );
+    productId: json['productId']?.toString() ?? '',
+    productName: json['productName']?.toString() ?? '',
+    quantity: (json['quantity'] as num).toInt(),
+    price: (json['price'] as num).toDouble(),
+  );
 }

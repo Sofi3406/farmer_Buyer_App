@@ -28,9 +28,20 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.agriculture, size: 80, color: Colors.green),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset(
+                'lib/asset/images/store.jpg',
+                width: 110,
+                height: 110,
+                fit: BoxFit.cover,
+              ),
+            ),
             const SizedBox(height: 20),
-            Text('FarmConnect', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'FarmConnect',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: 20),
             const CircularProgressIndicator(),
           ],

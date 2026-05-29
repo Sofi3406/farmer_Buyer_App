@@ -56,6 +56,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'lib/asset/images/store.jpg',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Full Name'),
@@ -86,7 +98,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 12),
               if (_selectedRole == 'farmer') ...[
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Farm Details (crops, size, etc.)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Farm Details (crops, size, etc.)',
+                  ),
                   onChanged: (v) => _farmDetails = v,
                 ),
                 const SizedBox(height: 12),
@@ -105,9 +119,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _confirmPasswordController,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                ),
                 obscureText: true,
-                validator: (v) => Validators.confirmPassword(v, _passwordController.text),
+                validator: (v) =>
+                    Validators.confirmPassword(v, _passwordController.text),
               ),
               const SizedBox(height: 24),
               CustomButton(
@@ -125,15 +142,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             'role': _selectedRole,
                             'password': _passwordController.text,
                             if (_location != null) 'location': _location,
-                            if (_farmDetails != null) 'farmDetails': _farmDetails,
+                            if (_farmDetails != null)
+                              'farmDetails': _farmDetails,
                           };
                           final success = await authProvider.register(userData);
                           if (!mounted) return;
                           if (success) {
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('Account created successfully')),
+                              const SnackBar(
+                                content: Text('Account created successfully'),
+                              ),
                             );
-                            await Future.delayed(const Duration(milliseconds: 700));
+                            await Future.delayed(
+                              const Duration(milliseconds: 700),
+                            );
                             final role = authProvider.user!.role;
                             if (!mounted) return;
                             if (role == 'farmer') {
@@ -145,7 +167,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }
                           } else {
                             messenger.showSnackBar(
-                              SnackBar(content: Text(authProvider.error ?? 'Registration failed')),
+                              SnackBar(
+                                content: Text(
+                                  authProvider.error ?? 'Registration failed',
+                                ),
+                              ),
                             );
                           }
                         }

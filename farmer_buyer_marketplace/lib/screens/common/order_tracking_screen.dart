@@ -5,6 +5,8 @@ import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/order_model.dart';
 import '../../widgets/loading_indicator.dart';
+import '../../config/route_observer.dart';
+import 'dart:async';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String orderId;
@@ -14,13 +16,32 @@ class OrderTrackingScreen extends StatefulWidget {
   State<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
 }
 
-class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
+class _OrderTrackingScreenState extends State<OrderTrackingScreen> with RouteAware {
+  Timer? _pollTimer;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<OrderProvider>(context, listen: false).fetchOrders();
     });
+    // If viewing a single order, poll for status updates every 8 seconds
+    if (widget.orderId != '0') {
+      _pollTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+        if (mounted) Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) routeObserver.subscribe(this, route);
+  }
+
+  @override
+  void didPopNext() {
+    if (mounted) Provider.of<OrderProvider>(context, listen: false).fetchOrders();
   }
 
   @override
@@ -86,6 +107,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       ),
                     ),
     );
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   Widget _buildHistoryList(List<Order> orders) {

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../config/route_observer.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_indicator.dart';
 
@@ -15,7 +16,7 @@ class BuyerDashboard extends StatefulWidget {
   State<BuyerDashboard> createState() => _BuyerDashboardState();
 }
 
-class _BuyerDashboardState extends State<BuyerDashboard> {
+class _BuyerDashboardState extends State<BuyerDashboard> with RouteAware {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedLocation;
   Timer? _pollTimer;
@@ -39,7 +40,26 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
   void dispose() {
     _pollTimer?.cancel();
     _searchController.dispose();
+    routeObserver.unsubscribe(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Refresh when returning to this screen
+    if (mounted) {
+      Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+    }
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../providers/order_provider.dart';
+import '../../widgets/order_card.dart';
 import '../../widgets/loading_indicator.dart';
 
 class FarmerOrdersScreen extends StatefulWidget {
@@ -80,18 +81,16 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
                     itemCount: orderProvider.orders.length,
                     itemBuilder: (ctx, i) {
                       final order = orderProvider.orders[i];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        child: ListTile(
-                          title: Text('Order #${order.id.substring(0, 8)}'),
-                          subtitle: Text(
-                            '${_itemNames(order)} • Amount: ETB ${order.totalAmount.toStringAsFixed(2)}',
-                          ),
-                          trailing: Text(
-                            order.status.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
+                      return OrderCard(
+                        order: order,
+                        showActions: true,
+                        onStatusChanged: () {
+                          // Refresh list and notify user when status changes
+                          _refreshOrders();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Order status updated')),
+                          );
+                        },
                       );
                     },
                   ),
@@ -99,9 +98,5 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
     );
   }
 
-  String _itemNames(dynamic order) {
-    final names = order.items.map((item) => item.productName).where((name) => name.toString().trim().isNotEmpty).toList();
-    if (names.isEmpty) return 'Items: -';
-    return 'Items: ${names.join(', ')}';
-  }
+  // Items are displayed inside OrderCard; no helper needed here.
 }

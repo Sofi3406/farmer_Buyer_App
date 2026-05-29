@@ -19,16 +19,17 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
 	void initState() {
 		super.initState();
 		WidgetsBinding.instance.addPostFrameCallback((_) {
-			Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+			final authProvider = Provider.of<AuthProvider>(context, listen: false);
+			final farmerId = authProvider.user?.id;
+			if (farmerId != null && farmerId.isNotEmpty) {
+				Provider.of<ProductProvider>(context, listen: false).fetchProducts(farmerId: farmerId);
+			}
 		});
 	}
 
 	@override
 	Widget build(BuildContext context) {
 		final productProvider = Provider.of<ProductProvider>(context);
-		final authProvider = Provider.of<AuthProvider>(context);
-		final farmerId = authProvider.user?.id;
-		final myProducts = productProvider.products.where((p) => p.farmerId == farmerId).toList();
 
 		return Scaffold(
 			appBar: AppBar(
@@ -46,15 +47,15 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
 			),
 			body: productProvider.isLoading
 					? const LoadingIndicator()
-					: myProducts.isEmpty
+					: productProvider.products.isEmpty
 							? const Center(child: Text('You have not added any products yet'))
 							: ListView.builder(
-									itemCount: myProducts.length,
+									itemCount: productProvider.products.length,
 									itemBuilder: (ctx, i) => ProductCard(
-										product: myProducts[i],
+										product: productProvider.products[i],
 										showFarmer: false,
 										onDelete: () async {
-											await productProvider.deleteProduct(myProducts[i].id);
+											await productProvider.deleteProduct(productProvider.products[i].id);
 										},
 									),
 								),

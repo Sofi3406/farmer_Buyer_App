@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../config/route_observer.dart';
 
@@ -20,10 +21,22 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      final farmerId = authProvider.user?.id;
+      if (farmerId != null && farmerId.isNotEmpty) {
+        productProvider.fetchProducts(farmerId: farmerId);
+      }
       Provider.of<OrderProvider>(context, listen: false).fetchOrders();
     });
     _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final productProvider = Provider.of<ProductProvider>(context, listen: false);
+        final farmerId = authProvider.user?.id;
+        if (farmerId != null && farmerId.isNotEmpty) {
+          productProvider.fetchProducts(farmerId: farmerId);
+        }
         Provider.of<OrderProvider>(context, listen: false).fetchOrders();
       }
     });
@@ -41,6 +54,12 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
   @override
   void didPopNext() {
     if (mounted) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      final farmerId = authProvider.user?.id;
+      if (farmerId != null && farmerId.isNotEmpty) {
+        productProvider.fetchProducts(farmerId: farmerId);
+      }
       Provider.of<OrderProvider>(context, listen: false).fetchOrders();
     }
   }
@@ -54,6 +73,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context);
     final orderProvider = Provider.of<OrderProvider>(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Farmer Dashboard')),
@@ -71,7 +91,12 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildStatCard('Products', '12', Icons.eco),
+                  _buildStatCard(
+                    'Products',
+                    '${productProvider.totalCount}',
+                    Icons.eco,
+                    badgeCount: productProvider.totalCount,
+                  ),
                   _buildStatCard(
                     'Orders',
                     '${orderProvider.totalCount}',

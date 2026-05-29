@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
@@ -34,32 +33,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     setState(() => _isPlacing = true);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
-
-    await productProvider.fetchProducts();
-    final latestProductsById = {
-      for (final product in productProvider.products) product.id: product,
-    };
-
-    for (final item in cartProvider.items) {
-      final latestProduct = latestProductsById[item.product.id];
-      if (latestProduct == null) {
-        if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(content: Text('Product ${item.product.name} is no longer available')),
-        );
-        return;
-      }
-      if (item.quantity > latestProduct.quantity) {
-        if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(content: Text('You can\'t order more than available quantity for ${item.product.name}. Only ${latestProduct.quantity} kg left.')),
-        );
-        return;
-      }
-    }
 
     final orderData = {
       'items': cartProvider.toOrderItems(),
@@ -71,7 +46,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     try {
       await orderProvider.placeOrder(orderData);
       cartProvider.clearCart();
-      await productProvider.fetchProducts();
       if (!mounted) return;
       messenger.showSnackBar(const SnackBar(content: Text('Order placed successfully')));
       final refreshToken = DateTime.now().millisecondsSinceEpoch.toString();

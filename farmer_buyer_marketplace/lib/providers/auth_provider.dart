@@ -9,6 +9,10 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  AuthProvider() {
+    loadUser();
+  }
+
   User? get user => _user;
   bool get isLoading => _isLoading;
   String? get error => _error;

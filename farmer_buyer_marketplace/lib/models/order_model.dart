@@ -22,14 +22,17 @@ class Order {
   });
 
   factory Order.fromJson(Map<String, dynamic> json) => Order(
-        id: json['_id'],
-        buyerId: json['buyerId'],
-        farmerId: json['farmerId'],
+        id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+        buyerId: json['buyerId']?.toString() ?? '',
+        farmerId: json['farmerId']?.toString() ?? '',
         items: (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList(),
-        totalAmount: json['totalAmount'].toDouble(),
-        status: OrderStatus.values.firstWhere((e) => e.toString() == 'OrderStatus.${json['status']}'),
-        orderDate: DateTime.parse(json['orderDate']),
-        deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
+        totalAmount: (json['totalAmount'] as num).toDouble(),
+        status: OrderStatus.values.firstWhere(
+          (e) => e.toString() == 'OrderStatus.${json['status']}',
+          orElse: () => OrderStatus.pending,
+        ),
+        orderDate: DateTime.parse((json['orderDate'] ?? json['createdAt']).toString()),
+        deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate'].toString()) : null,
       );
 }
 
@@ -47,9 +50,9 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) => OrderItem(
-        productId: json['productId'],
-        productName: json['productName'],
-        quantity: json['quantity'],
-        price: json['price'].toDouble(),
+      productId: json['productId']?.toString() ?? '',
+      productName: json['productName']?.toString() ?? '',
+      quantity: (json['quantity'] as num).toInt(),
+      price: (json['price'] as num).toDouble(),
       );
 }

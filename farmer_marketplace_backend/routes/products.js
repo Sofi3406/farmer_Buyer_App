@@ -6,12 +6,13 @@ const roleCheck = require('../middleware/roleCheck');
 // Get all products with filters, search, pagination
 router.get('/', async (req, res) => {
   try {
-    const { search, location, minPrice, maxPrice, category, page = 1, limit = 10 } = req.query;
+    const { search, location, minPrice, maxPrice, category, farmerId, page = 1, limit = 10 } = req.query;
     let filter = {};
 
     if (search) filter.name = { $regex: search, $options: 'i' };
     if (location) filter.location = { $regex: location, $options: 'i' };
     if (category) filter.category = category;
+    if (farmerId) filter.farmerId = farmerId;
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = parseFloat(minPrice);

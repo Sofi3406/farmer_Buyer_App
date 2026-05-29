@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../providers/order_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../widgets/loading_indicator.dart';
 
 class FarmerOrdersScreen extends StatefulWidget {
@@ -48,10 +47,6 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final orderProvider = Provider.of<OrderProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    final farmerId = authProvider.user?.id;
-
-    final myOrders = orderProvider.orders.where((o) => o.farmerId == farmerId).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -72,7 +67,7 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
         onRefresh: _refreshOrders,
         child: orderProvider.isLoading && !_refreshing
             ? const LoadingIndicator()
-            : myOrders.isEmpty
+            : orderProvider.orders.isEmpty
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: const [
@@ -82,15 +77,15 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: myOrders.length,
+                    itemCount: orderProvider.orders.length,
                     itemBuilder: (ctx, i) {
-                      final order = myOrders[i];
+                      final order = orderProvider.orders[i];
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         child: ListTile(
                           title: Text('Order #${order.id.substring(0, 8)}'),
                           subtitle: Text(
-                            'Items: ${order.items.length} • Amount: ETB ${order.totalAmount.toStringAsFixed(2)}',
+                            '${_itemNames(order)} • Amount: ETB ${order.totalAmount.toStringAsFixed(2)}',
                           ),
                           trailing: Text(
                             order.status.name,
@@ -102,5 +97,11 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
                   ),
       ),
     );
+  }
+
+  String _itemNames(dynamic order) {
+    final names = order.items.map((item) => item.productName).where((name) => name.toString().trim().isNotEmpty).toList();
+    if (names.isEmpty) return 'Items: -';
+    return 'Items: ${names.join(', ')}';
   }
 }

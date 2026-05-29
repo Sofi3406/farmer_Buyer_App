@@ -124,12 +124,20 @@ router.put('/:id/status', auth, async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    // Check permissions
-    if (order.farmerId.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
+    // Check permissions:
+    // - admin can change any status
+    // - farmer (owner) can change status for their orders
+    // - buyer can only mark their own order as 'delivered'
+    const requestedStatus = String(status);
+    const isAdmin = req.user.role === 'admin';
+    const isFarmerOwner = req.user.role === 'farmer' && order.farmerId.toString() === req.user.id;
+    const isBuyerOwnerDeliver = req.user.role === 'buyer' && order.buyerId.toString() === req.user.id && requestedStatus === 'delivered';
+
+    if (!(isAdmin || isFarmerOwner || isBuyerOwnerDeliver)) {
+      return res.status(403).json({ message: 'Not authorized to change status' });
     }
 
-    order.status = status;
+    order.status = requestedStatus;
     await order.save();
     res.json({ order });
   } catch (error) {

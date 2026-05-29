@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/order_model.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class OrderCard extends StatelessWidget {
@@ -57,6 +58,22 @@ class OrderCard extends StatelessWidget {
                           },
                           child: const Text('Mark Shipped'),
                         ),
+                      // If order has been shipped, allow buyer to confirm delivery
+                      if (order.status == OrderStatus.shipped)
+                        Builder(builder: (ctx) {
+                          final role = Provider.of<AuthProvider>(ctx, listen: false).user?.role ?? '';
+                          if (role == 'buyer') {
+                            return ElevatedButton(
+                              onPressed: () async {
+                                await Provider.of<OrderProvider>(context, listen: false)
+                                    .updateOrderStatus(order.id, 'delivered');
+                                onStatusChanged?.call();
+                              },
+                              child: const Text('Confirm Delivery'),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
                     ],
                   )
                 else

@@ -103,6 +103,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> with RouteAwa
                                 subtitle: Text('Qty: ${item.quantity} x ETB ${item.price}'),
                                 trailing: Text('ETB ${item.price * item.quantity}'),
                               )),
+                          const SizedBox(height: 12),
+                          _buildBuyerDeliveredAction(order),
                         ],
                       ),
                     ),
@@ -133,7 +135,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> with RouteAwa
             subtitle: Text(
               '${_itemNames(order)} • ETB ${order.totalAmount.toStringAsFixed(2)}\n${order.orderDate.toLocal()}',
             ),
-            trailing: Text(order.status.name),
+            trailing: _buildHistoryTrailing(order),
             onTap: () => context.push('/order-tracking/${order.id}'),
           ),
         );
@@ -172,6 +174,55 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> with RouteAwa
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildHistoryTrailing(Order order) {
+    final role = Provider.of<AuthProvider>(context, listen: false).user?.role ?? '';
+    final showDeliveredAction = role == 'buyer' && order.status == OrderStatus.shipped;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(order.status.name),
+        if (showDeliveredAction) ...[
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () async {
+              await Provider.of<OrderProvider>(context, listen: false).updateOrderStatus(order.id, 'delivered');
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Marked as delivered')),
+              );
+            },
+            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            child: const Text('Mark Delivered'),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBuyerDeliveredAction(Order order) {
+    final role = Provider.of<AuthProvider>(context, listen: false).user?.role ?? '';
+    if (role != 'buyer' || order.status != OrderStatus.shipped) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          await Provider.of<OrderProvider>(context, listen: false).updateOrderStatus(order.id, 'delivered');
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Marked as delivered')),
+          );
+        },
+        icon: const Icon(Icons.check_circle_outline),
+        label: const Text('Mark Delivered'),
+      ),
     );
   }
 }

@@ -22,6 +22,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
   final _descController = TextEditingController();
+  final _farmerNameController = TextEditingController();
+  final _accountController = TextEditingController();
+  final _phoneController = TextEditingController();
   String? _location;
   List<String> _imageUrls = [];
   bool _isUploading = false;
@@ -29,11 +32,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
   List<double> _uploadProgress = [];
 
   @override
+  void initState() {
+    super.initState();
+    _accountController.text = 'CBE 1000212203 Sofiya';
+    _phoneController.text = '+251930670088';
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
     _descController.dispose();
+    _farmerNameController.dispose();
+    _accountController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -92,6 +105,24 @@ class _AddProductScreenState extends State<AddProductScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            TextFormField(
+              controller: _farmerNameController,
+              decoration: const InputDecoration(labelText: 'Farmer Name'),
+              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _accountController,
+              decoration: const InputDecoration(labelText: 'Account Number (CBE)'),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(labelText: 'Telebirr Phone Number'),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Product Name'),
@@ -163,6 +194,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     onPressed: () async {
                       if (_formKey.currentState!.validate() && _location != null) {
                         final productData = {
+                          'farmerName': _farmerNameController.text.trim(),
+                          'accountNumber': _accountController.text.trim(),
+                          'phone': _phoneController.text.trim(),
                           'name': _nameController.text.trim(),
                           'price': double.parse(_priceController.text),
                           'quantity': int.parse(_quantityController.text),

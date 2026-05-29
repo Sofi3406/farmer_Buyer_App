@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/location_service.dart';
 
 class LocationPicker extends StatefulWidget {
   final Function(String) onLocationSelected;
@@ -10,27 +9,12 @@ class LocationPicker extends StatefulWidget {
 }
 
 class _LocationPickerState extends State<LocationPicker> {
-  String? _selectedAddress;
-  bool _isLoading = false;
+  final TextEditingController _locationController = TextEditingController();
 
-  Future<void> _getCurrentLocation() async {
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _isLoading = true);
-    try {
-      final position = await LocationService.getCurrentPosition();
-      final address = await LocationService.getAddressFromLatLng(position.latitude, position.longitude);
-      if (!mounted) return;
-      setState(() => _selectedAddress = address);
-      widget.onLocationSelected(address);
-    } catch (e) {
-      if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(e.toString())));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+  @override
+  void dispose() {
+    _locationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,12 +22,17 @@ class _LocationPickerState extends State<LocationPicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_selectedAddress != null) Text('Location: $_selectedAddress'),
-        const SizedBox(height: 8),
-        ElevatedButton.icon(
-          onPressed: _isLoading ? null : _getCurrentLocation,
-          icon: const Icon(Icons.my_location),
-          label: Text(_isLoading ? 'Getting location...' : 'Use Current Location'),
+        TextFormField(
+          controller: _locationController,
+          decoration: const InputDecoration(
+            labelText: 'Farm Location',
+            hintText: 'Enter your village, town, or area',
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) => value == null || value.trim().isEmpty ? 'Please enter your farm location' : null,
+          onChanged: (value) {
+            widget.onLocationSelected(value.trim());
+          },
         ),
       ],
     );

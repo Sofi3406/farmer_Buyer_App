@@ -84,7 +84,44 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.agriculture, size: 100, color: Colors.green),
+              Container(
+                width: 180,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'lib/asset/images/car.jpg',
+                        fit: BoxFit.cover,
+                      ),
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Color(0x33000000),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
               const Text('Welcome, Farmer!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 40),
@@ -94,13 +131,13 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
                   _buildStatCard(
                     'Products',
                     '${productProvider.totalCount}',
-                    Icons.eco,
+                    'lib/asset/images/product.jpg',
                     badgeCount: productProvider.totalCount,
                   ),
                   _buildStatCard(
                     'Orders',
                     '${orderProvider.totalCount}',
-                    Icons.shopping_cart,
+                    'lib/asset/images/order.jpg',
                     badgeCount: orderProvider.totalCount,
                   ),
                 ],
@@ -127,40 +164,83 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, {int badgeCount = 0}) {
-    return Card(
-      elevation: 4,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Icon(icon, size: 40, color: Colors.green),
-                const SizedBox(height: 8),
-                Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                Text(title),
-              ],
-            ),
-          ),
-          if (badgeCount > 0)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  badgeCount > 99 ? '99+' : '$badgeCount',
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
+  Widget _buildStatCard(String title, String value, String imagePath, {int badgeCount = 0}) {
+    return SizedBox(
+      width: 150,
+      child: Card(
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withValues(alpha: 0.15),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                          ),
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Color(0x22000000),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                  Text(title),
+                ],
               ),
             ),
-        ],
+            if (badgeCount > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    badgeCount > 99 ? '99+' : '$badgeCount',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -170,9 +250,33 @@ class _FarmerDashboardState extends State<FarmerDashboard> with RouteAware {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.green),
-            child: Text('FarmConnect', style: TextStyle(color: Colors.white, fontSize: 24)),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.green),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'lib/asset/images/car.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.28),
+                  ),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'FarmConnect',
+                        style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.dashboard),

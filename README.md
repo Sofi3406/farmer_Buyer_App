@@ -120,6 +120,20 @@ flutter pub get
 flutter run
 ```
 
+## Screenshots
+
+App screenshots (images are located at `farmer_buyer_marketplace/lib/asset/images/`):
+
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+	<img src="farmer_buyer_marketplace/lib/asset/images/image1.png" alt="image1" width="300" />
+	<img src="farmer_buyer_marketplace/lib/asset/images/image2.png" alt="image2" width="300" />
+	<img src="farmer_buyer_marketplace/lib/asset/images/image3.png" alt="image3" width="300" />
+	<img src="farmer_buyer_marketplace/lib/asset/images/image4.png" alt="image4" width="300" />
+	<img src="farmer_buyer_marketplace/lib/asset/images/image5.png" alt="image5" width="300" />
+	<img src="farmer_buyer_marketplace/lib/asset/images/image6.png" alt="image6" width="300" />
+</div>
+
+
 ## License
 
 No license has been specified yet.

@@ -79,6 +79,48 @@ class _BuyerDashboardState extends State<BuyerDashboard> with RouteAware {
       drawer: _buildDrawer(context, orderProvider.totalCount),
       body: Column(
         children: [
+          const SizedBox(height: 8),
+          Container(
+            width: 180,
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withValues(alpha: 0.18),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'lib/asset/images/buyer.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Color(0x33000000),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          const Text('Welcome, Buyer!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 26),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -146,12 +188,44 @@ class _BuyerDashboardState extends State<BuyerDashboard> with RouteAware {
     return Drawer(
       child: ListView(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.green),
-            child: Text('FarmConnect', style: TextStyle(color: Colors.white, fontSize: 24)),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.green),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'lib/asset/images/buyer.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.28),
+                  ),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'FarmConnect',
+                        style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           ListTile(
-            leading: const Icon(Icons.store),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'lib/asset/images/product.jpg',
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+              ),
+            ),
             title: const Text('Browse Products'),
             onTap: () => context.go('/buyer-dashboard'),
           ),
@@ -164,7 +238,15 @@ class _BuyerDashboardState extends State<BuyerDashboard> with RouteAware {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.history),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'lib/asset/images/recieved.jpg',
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+              ),
+            ),
             title: const Text('Order History'),
             trailing: orderCount > 0
                 ? Container(

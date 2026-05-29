@@ -20,14 +20,14 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-        id: json['_id'],
-        name: json['name'],
-        email: json['email'],
-        role: json['role'],
-        phone: json['phone'],
-        location: json['location'],
-        farmDetails: json['farmDetails'],
-        profileImage: json['profileImage'],
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'buyer',
+      phone: json['phone']?.toString() ?? '',
+      location: json['location']?.toString(),
+      farmDetails: json['farmDetails']?.toString(),
+      profileImage: json['profileImage']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {

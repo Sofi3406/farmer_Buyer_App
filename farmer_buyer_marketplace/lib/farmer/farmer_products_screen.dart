@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/product_provider.dart';
@@ -30,7 +31,19 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
 		final myProducts = productProvider.products.where((p) => p.farmerId == farmerId).toList();
 
 		return Scaffold(
-			appBar: AppBar(title: const Text('My Products')),
+			appBar: AppBar(
+				title: const Text('My Products'),
+				leading: IconButton(
+					icon: const Icon(Icons.arrow_back),
+					onPressed: () {
+						if (Navigator.of(context).canPop()) {
+							Navigator.of(context).pop();
+						} else {
+							context.go('/farmer-dashboard');
+						}
+					},
+				),
+			),
 			body: productProvider.isLoading
 					? const LoadingIndicator()
 					: myProducts.isEmpty
@@ -46,7 +59,7 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
 									),
 								),
 			floatingActionButton: FloatingActionButton(
-				onPressed: () => Navigator.pushNamed(context, '/farmer-add-product'),
+				onPressed: () => context.push('/farmer-add-product'),
 				child: const Icon(Icons.add),
 			),
 		);

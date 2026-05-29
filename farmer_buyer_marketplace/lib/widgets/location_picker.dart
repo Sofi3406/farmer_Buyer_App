@@ -14,16 +14,22 @@ class _LocationPickerState extends State<LocationPicker> {
   bool _isLoading = false;
 
   Future<void> _getCurrentLocation() async {
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
     try {
       final position = await LocationService.getCurrentPosition();
       final address = await LocationService.getAddressFromLatLng(position.latitude, position.longitude);
+      if (!mounted) return;
       setState(() => _selectedAddress = address);
       widget.onLocationSelected(address);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

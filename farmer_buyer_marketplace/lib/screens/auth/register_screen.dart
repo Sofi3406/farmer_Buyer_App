@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/loading_indicator.dart';
 import '../../utils/validators.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -38,7 +37,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(
+        title: const Text('Create Account'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/login');
+            }
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -64,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedRole,
+                initialValue: _selectedRole,
                 items: const [
                   DropdownMenuItem(value: 'buyer', child: Text('Buyer')),
                   DropdownMenuItem(value: 'farmer', child: Text('Farmer')),
@@ -99,41 +110,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: (v) => Validators.confirmPassword(v, _passwordController.text),
               ),
               const SizedBox(height: 24),
-              if (authProvider.isLoading)
-                const LoadingIndicator()
-              else
-                CustomButton(
-                  text: 'Register',
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final userData = {
-                        'name': _nameController.text.trim(),
-                        'email': _emailController.text.trim(),
-                        'phone': _phoneController.text.trim(),
-                        'role': _selectedRole,
-                        'password': _passwordController.text,
-                        if (_location != null) 'location': _location,
-                        if (_farmDetails != null) 'farmDetails': _farmDetails,
-                      };
-                      final success = await authProvider.register(userData);
-                      if (success && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Account created successfully')),
-                        );
-                        await Future.delayed(const Duration(milliseconds: 700));
-                        if (!mounted) return;
-                        final role = authProvider.user!.role;
-                        if (role == 'farmer') context.go('/farmer-dashboard');
-                        else if (role == 'buyer') context.go('/buyer-dashboard');
-                        else context.go('/admin-dashboard');
-                      } else if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(authProvider.error ?? 'Registration failed')),
-                        );
-                      }
-                    }
-                  },
-                ),
+              CustomButton(
+                text: authProvider.isLoading ? 'Registering...' : 'Register',
+                onPressed: authProvider.isLoading
+                    ? null
+                    : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final router = GoRouter.of(context);
+                        if (_formKey.currentState!.validate()) {
+                          final userData = {
+                            'name': _nameController.text.trim(),
+                            'email': _emailController.text.trim(),
+                            'phone': _phoneController.text.trim(),
+                            'role': _selectedRole,
+                            'password': _passwordController.text,
+                            if (_location != null) 'location': _location,
+                            if (_farmDetails != null) 'farmDetails': _farmDetails,
+                          };
+                          final success = await authProvider.register(userData);
+                          if (!mounted) return;
+                          if (success) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Account created successfully')),
+                            );
+                            await Future.delayed(const Duration(milliseconds: 700));
+                            final role = authProvider.user!.role;
+                            if (!mounted) return;
+                            if (role == 'farmer') {
+                              router.go('/farmer-dashboard');
+                            } else if (role == 'buyer') {
+                              router.go('/buyer-dashboard');
+                            } else {
+                              router.go('/admin-dashboard');
+                            }
+                          } else {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(authProvider.error ?? 'Registration failed')),
+                            );
+                          }
+                        }
+                      },
+              ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/login'),

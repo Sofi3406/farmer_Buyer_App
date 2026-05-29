@@ -3,21 +3,35 @@ const Product = require('../models/Product');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
-// Get all products with filters
+// Get all products with filters, search, pagination
 router.get('/', async (req, res) => {
   try {
-    const { search, location } = req.query;
+    const { search, location, minPrice, maxPrice, category, page = 1, limit = 10 } = req.query;
     let filter = {};
 
-    if (search) {
-      filter.name = { $regex: search, $options: 'i' };
-    }
-    if (location) {
-      filter.location = { $regex: location, $options: 'i' };
+    if (search) filter.name = { $regex: search, $options: 'i' };
+    if (location) filter.location = { $regex: location, $options: 'i' };
+    if (category) filter.category = category;
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
 
-    const products = await Product.find(filter).sort({ createdAt: -1 });
-    res.json({ products });
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const products = await Product.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Product.countDocuments(filter);
+
+    res.json({
+      products,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit))
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

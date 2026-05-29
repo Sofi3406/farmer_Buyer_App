@@ -7,16 +7,19 @@ class OrderProvider extends ChangeNotifier {
   List<Order> _orders = [];
   bool _isLoading = false;
   String? _error;
+  int _totalCount = 0;
 
   List<Order> get orders => _orders;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int get totalCount => _totalCount;
 
   Future<void> fetchOrders() async {
     _setLoading(true);
     try {
       final response = await ApiService.get(AppConstants.ordersEndpoint);
       _orders = (response['orders'] as List).map((o) => Order.fromJson(o)).toList();
+      _totalCount = (response['total'] as int?) ?? _orders.length;
       _error = null;
       _setLoading(false);
     } catch (e) {
@@ -35,6 +38,8 @@ class OrderProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       _setLoading(false);
+      // Re-throw so callers (UI) can display the error immediately
+      rethrow;
     }
   }
 

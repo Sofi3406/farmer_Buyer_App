@@ -21,7 +21,7 @@ class OrderCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ExpansionTile(
         title: Text('Order #${order.id.substring(0, 8)}'),
-        subtitle: Text('Total: ₹${order.totalAmount} | Status: ${order.status.toString().split('.').last}'),
+        subtitle: Text('Total: ETB ${order.totalAmount} | Status: ${order.status.toString().split('.').last}'),
         children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -30,8 +30,8 @@ class OrderCard extends StatelessWidget {
               children: [
                 ...order.items.map((item) => ListTile(
                       title: Text(item.productName),
-                      subtitle: Text('Qty: ${item.quantity} x ₹${item.price}'),
-                      trailing: Text('₹${item.price * item.quantity}'),
+                      subtitle: Text('Qty: ${item.quantity}kg x ETB ${item.price}'),
+                      trailing: Text('ETB ${item.price * item.quantity}'),
                     )),
                 const Divider(),
                 if (showActions)

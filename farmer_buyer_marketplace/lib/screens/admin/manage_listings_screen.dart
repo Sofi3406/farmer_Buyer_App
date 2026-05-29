@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/product_provider.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_indicator.dart';
@@ -24,7 +25,19 @@ class _ManageListingsScreenState extends State<ManageListingsScreen> {
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Listings')),
+      appBar: AppBar(
+        title: const Text('Manage Listings'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/admin-dashboard');
+            }
+          },
+        ),
+      ),
       body: productProvider.isLoading
           ? const LoadingIndicator()
           : ListView.builder(

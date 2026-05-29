@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/loading_indicator.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,8 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome Back')),
-      body: Padding(
+      appBar: AppBar(title: const Text('Login')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
@@ -51,38 +50,62 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) => v != null && v.length >= 6 ? null : 'Password must be at least 6 characters',
               ),
               const SizedBox(height: 24),
-              if (authProvider.isLoading)
-                const LoadingIndicator()
-              else
-                CustomButton(
-                  text: 'Login',
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      final success = await authProvider.login(
-                        _emailController.text.trim(),
-                        _passwordController.text.trim(),
-                      );
-                      if (success && mounted) {
-                        final role = authProvider.user!.role;
-                        if (role == 'farmer') context.go('/farmer-dashboard');
-                        else if (role == 'buyer') context.go('/buyer-dashboard');
-                        else context.go('/admin-dashboard');
-                      } else if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(authProvider.error ?? 'Login failed')),
-                        );
-                      }
-                    }
-                  },
-                ),
+              CustomButton(
+                text: authProvider.isLoading ? 'Logging in...' : 'Login',
+                onPressed: authProvider.isLoading
+                    ? null
+                    : () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        final router = GoRouter.of(context);
+                        if (_formKey.currentState!.validate()) {
+                          final success = await authProvider.login(
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
+                          if (!mounted) return;
+                          if (success) {
+                            final role = authProvider.user!.role;
+                            if (role == 'farmer') {
+                              router.go('/farmer-dashboard');
+                            } else if (role == 'buyer') {
+                              router.go('/buyer-dashboard');
+                            } else {
+                              router.go('/admin-dashboard');
+                            }
+                          } else {
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(authProvider.error ?? 'Login failed')),
+                            );
+                          }
+                        }
+                      },
+              ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go('/forgot-password'),
                 child: const Text('Forgot Password?'),
               ),
-              TextButton(
-                onPressed: () => context.go('/register'),
-                child: const Text("Don't have an account? Register"),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'New here?',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomButton(
+                      text: 'Create an account',
+                      onPressed: () => context.go('/register'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

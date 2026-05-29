@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'route_observer.dart';
 import '../screens/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/register_screen.dart';
@@ -19,7 +21,8 @@ import '../screens/admin/manage_users_screen.dart';
 import '../screens/admin/manage_listings_screen.dart';
 
 final GoRouter router = GoRouter(
-  initialLocation: '/',
+  observers: [routeObserver],
+  initialLocation: '/login',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
@@ -29,7 +32,12 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/farmer-add-product', builder: (context, state) => const AddProductScreen()),
     GoRoute(path: '/farmer-orders', builder: (context, state) => const FarmerOrdersScreen()),
     GoRoute(path: '/farmer-products', builder: (context, state) => const FarmerProductsScreen()),
-    GoRoute(path: '/buyer-dashboard', builder: (context, state) => const BuyerDashboard()),
+    GoRoute(
+      path: '/buyer-dashboard',
+      builder: (context, state) => BuyerDashboard(
+        key: ValueKey(state.uri.queryParameters['refresh'] ?? 'default'),
+      ),
+    ),
     GoRoute(path: '/product-detail/:id', builder: (context, state) => ProductDetailScreen(productId: state.pathParameters['id']!)),
     GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
     GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),

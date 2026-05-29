@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/product_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/loading_indicator.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -25,14 +25,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _placeOrder() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    if (_isPlacing) return; // prevent duplicate submissions
     if (_addressController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter delivery address')));
+      messenger.showSnackBar(const SnackBar(content: Text('Please enter delivery address')));
       return;
     }
     setState(() => _isPlacing = true);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+
+    await productProvider.fetchProducts();
+    final latestProductsById = {
+      for (final product in productProvider.products) product.id: product,
+    };
+
+    for (final item in cartProvider.items) {
+      final latestProduct = latestProductsById[item.product.id];
+      if (latestProduct == null) {
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text('Product ${item.product.name} is no longer available')),
+        );
+        return;
+      }
+      if (item.quantity > latestProduct.quantity) {
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text('You can\'t order more than available quantity for ${item.product.name}. Only ${latestProduct.quantity} kg left.')),
+        );
+        return;
+      }
+    }
 
     final orderData = {
       'items': cartProvider.toOrderItems(),
@@ -41,20 +68,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'buyerId': authProvider.user!.id,
       // farmerId will be inferred from products (backend logic)
     };
-    await orderProvider.placeOrder(orderData);
-    cartProvider.clearCart();
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed successfully')));
-      context.go('/buyer-dashboard');
+    try {
+      await orderProvider.placeOrder(orderData);
+      cartProvider.clearCart();
+      await productProvider.fetchProducts();
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('Order placed successfully')));
+      final refreshToken = DateTime.now().millisecondsSinceEpoch.toString();
+      router.go('/buyer-dashboard?refresh=$refreshToken');
+    } catch (e) {
+      // Show API error to buyer (e.g., insufficient stock)
+      final msg = e.toString();
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) {
+        setState(() => _isPlacing = false);
+      }
     }
-    setState(() => _isPlacing = false);
   }
 
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/buyer-dashboard');
+            }
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -69,14 +118,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   final item = cartProvider.items[i];
                   return ListTile(
                     title: Text(item.product.name),
-                    subtitle: Text('Qty: ${item.quantity} x ₹${item.product.price}'),
-                    trailing: Text('₹${item.totalPrice}'),
+                    subtitle: Text('Qty: ${item.quantity}kg x ETB ${item.product.price}'),
+                    trailing: Text('ETB ${item.totalPrice}'),
                   );
                 },
               ),
             ),
             const Divider(),
-            Text('Total: ₹${cartProvider.totalAmount}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Total: ETB ${cartProvider.totalAmount}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: _addressController,
@@ -84,12 +133,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               maxLines: 3,
             ),
             const SizedBox(height: 24),
-            _isPlacing
-                ? const LoadingIndicator()
-                : CustomButton(
-                    text: 'Place Order',
-                    onPressed: _placeOrder,
-                  ),
+            CustomButton(
+              text: _isPlacing ? 'Placing...' : 'Place Order',
+              onPressed: _isPlacing ? null : _placeOrder,
+            ),
           ],
         ),
       ),

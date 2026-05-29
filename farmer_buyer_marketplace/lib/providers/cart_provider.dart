@@ -3,18 +3,18 @@ import '../models/cart_item_model.dart';
 import '../models/product_model.dart';
 
 class CartProvider extends ChangeNotifier {
-  List<CartItem> _items = [];
+  final List<CartItem> _items = [];
 
   List<CartItem> get items => _items;
   int get itemCount => _items.length;
   double get totalAmount => _items.fold(0, (sum, item) => sum + item.totalPrice);
 
-  void addToCart(Product product) {
+  void addToCart(Product product, {int quantity = 1}) {
     final existingIndex = _items.indexWhere((item) => item.product.id == product.id);
     if (existingIndex != -1) {
-      _items[existingIndex].quantity++;
+      _items[existingIndex].quantity += quantity;
     } else {
-      _items.add(CartItem(product: product));
+      _items.add(CartItem(product: product, quantity: quantity));
     }
     notifyListeners();
   }

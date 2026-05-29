@@ -30,7 +30,18 @@ class ProductCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: product.images.isNotEmpty
-                    ? Image.network(product.images.first, width: 80, height: 80, fit: BoxFit.cover)
+                    ? Image.network(
+                        product.images.first,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        ),
+                      )
                     : Container(width: 80, height: 80, color: Colors.grey[300], child: const Icon(Icons.image)),
               ),
               const SizedBox(width: 12),
@@ -40,8 +51,8 @@ class ProductCard extends StatelessWidget {
                   children: [
                     Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 4),
-                    Text('₹${product.price} per unit', style: const TextStyle(color: Colors.green)),
-                    Text('Qty: ${product.quantity}'),
+                    Text('ETB ${product.price} per kg', style: const TextStyle(color: Colors.green)),
+                    Text('Qty: ${product.quantity}kg'),
                     if (showFarmer) Text('Farmer: ${product.farmerName}'),
                     Text('📍 ${product.location}'),
                   ],
@@ -55,9 +66,45 @@ class ProductCard extends StatelessWidget {
               else
                 IconButton(
                   icon: const Icon(Icons.add_shopping_cart, color: Colors.green),
-                  onPressed: () {
-                    Provider.of<CartProvider>(context, listen: false).addToCart(product);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to cart')));
+                  onPressed: () async {
+                    final cart = Provider.of<CartProvider>(context, listen: false);
+                    final messenger = ScaffoldMessenger.of(context);
+                    final qty = await showDialog<int>(
+                      context: context,
+                      builder: (ctx) {
+                        final controller = TextEditingController(text: '1');
+                        return AlertDialog(
+                          title: const Text('Enter amount (kg)'),
+                          content: TextField(
+                            controller: controller,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(suffixText: 'kg'),
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+                            TextButton(
+                              onPressed: () {
+                                final v = int.tryParse(controller.text);
+                                if (v == null || v <= 0) return;
+                                Navigator.of(ctx).pop(v);
+                              },
+                              child: const Text('Add'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    if (qty != null) {
+                      final existingIndex = cart.items.indexWhere((it) => it.product.id == product.id);
+                      final existingQty = existingIndex != -1 ? cart.items[existingIndex].quantity : 0;
+                      final available = product.quantity - existingQty;
+                      if (qty > available) {
+                        messenger.showSnackBar(SnackBar(content: Text('Only $available kg available')));
+                      } else {
+                        cart.addToCart(product, quantity: qty);
+                        messenger.showSnackBar(const SnackBar(content: Text('Added to cart')));
+                      }
+                    }
                   },
                 ),
             ],

@@ -16,10 +16,14 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/users', require('./routes/users'));
 
 // Basic error handler
+app.use('/uploads', express.static('uploads'));
+app.use('/api/upload', require('./routes/upload'));
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
+
+
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../config/app_constants.dart';
@@ -40,6 +41,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _updateProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     setState(() => _isLoading = true);
     try {
       final data = {
@@ -50,14 +53,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       };
       await ApiService.put('${AppConstants.usersEndpoint}/profile', data);
       // Refresh user data
-      await Provider.of<AuthProvider>(context, listen: false).loadUser();
+      await authProvider.loadUser();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+        messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -65,7 +72,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).user!;
     return Scaffold(
-      appBar: AppBar(title: const Text('My Profile')),
+      appBar: AppBar(
+        title: const Text('My Profile'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+              return;
+            }
+            final role = Provider.of<AuthProvider>(context, listen: false).user?.role ?? '';
+            switch (role) {
+              case 'farmer':
+                context.go('/farmer-dashboard');
+                break;
+              case 'buyer':
+                context.go('/buyer-dashboard');
+                break;
+              case 'admin':
+                context.go('/admin-dashboard');
+                break;
+              default:
+                context.go('/login');
+            }
+          },
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -104,8 +136,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () async {
+                  final router = GoRouter.of(context);
                 await Provider.of<AuthProvider>(context, listen: false).logout();
-                if (mounted) Navigator.pushReplacementNamed(context, '/login');
+                  if (mounted) router.go('/login');
               },
               child: const Text('Logout', style: TextStyle(color: Colors.red)),
             ),

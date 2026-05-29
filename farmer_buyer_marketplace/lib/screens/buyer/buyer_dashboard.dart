@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/order_provider.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/loading_indicator.dart';
 
@@ -16,17 +18,26 @@ class BuyerDashboard extends StatefulWidget {
 class _BuyerDashboardState extends State<BuyerDashboard> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedLocation;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+    });
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        Provider.of<ProductProvider>(context, listen: false).fetchProducts();
+        Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+      }
     });
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -34,6 +45,7 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
+    final orderProvider = Provider.of<OrderProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Marketplace'),
@@ -44,7 +56,7 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
           ),
         ],
       ),
-      drawer: _buildDrawer(context),
+      drawer: _buildDrawer(context, orderProvider.totalCount),
       body: Column(
         children: [
           Padding(
@@ -110,7 +122,7 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
     );
   }
 
-  Drawer _buildDrawer(BuildContext context) {
+  Drawer _buildDrawer(BuildContext context, int orderCount) {
     return Drawer(
       child: ListView(
         children: [
@@ -126,12 +138,31 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
           ListTile(
             leading: const Icon(Icons.shopping_cart),
             title: const Text('My Cart'),
-            onTap: () => context.go('/cart'),
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push('/cart');
+            },
           ),
           ListTile(
             leading: const Icon(Icons.history),
             title: const Text('Order History'),
-            onTap: () => context.go('/order-tracking/0'), // pass any id, screen will fetch all
+            trailing: orderCount > 0
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      orderCount > 99 ? '99+' : '$orderCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                : null,
+            onTap: () {
+              Navigator.of(context).pop();
+              context.push('/order-tracking/0'); // pass any id, screen will fetch all
+            },
           ),
           ListTile(
             leading: const Icon(Icons.person),

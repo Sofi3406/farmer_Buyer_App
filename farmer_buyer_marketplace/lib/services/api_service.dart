@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:async';
-import 'dart:io' show SocketException;
+import 'dart:io' show SocketException, Platform;
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import '../config/app_constants.dart';
 import 'storage_service.dart';
 
@@ -28,6 +29,53 @@ class ApiService {
       throw Exception('Request timed out. Make sure the backend server is running and the API URL is correct.');
     } on SocketException {
       throw Exception('Cannot reach the backend server. Check the API URL and network connection.');
+    }
+  }
+
+  static Future<dynamic> uploadImages(
+    List<String> imagePaths, {
+    void Function(int index, int sent, int total)? onProgress,
+  }) async {
+    try {
+      final token = await StorageService.getToken();
+      final dio = Dio(BaseOptions(baseUrl: AppConstants.baseUrl, connectTimeout: const Duration(seconds: 15)));
+      if (token != null) {
+        dio.options.headers['Authorization'] = 'Bearer $token';
+      }
+
+      final List<String> uploadedUrls = [];
+
+      for (var i = 0; i < imagePaths.length; i++) {
+        final path = imagePaths[i];
+        final fileName = path.split(Platform.pathSeparator).last;
+        final formData = FormData.fromMap({
+          'images': MultipartFile.fromFileSync(path, filename: fileName),
+        });
+
+        final response = await dio.post('/upload', data: formData, onSendProgress: (sent, total) {
+          if (onProgress != null) onProgress(i, sent, total);
+        });
+
+        if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+          final data = response.data;
+          if (data is Map && data['urls'] is List && data['urls'].isNotEmpty) {
+            uploadedUrls.add(data['urls'][0]);
+          }
+        } else {
+          throw Exception('Upload failed for file: $fileName');
+        }
+      }
+
+      return {'urls': uploadedUrls};
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.sendTimeout) {
+        throw Exception('Request timed out. Make sure the backend server is running and the API URL is correct.');
+      }
+      throw Exception('Upload failed: ${e.message}');
+    } on SocketException {
+      throw Exception('Cannot reach the backend server. Check the API URL and network connection.');
+    } catch (e) {
+      throw Exception('Upload failed: $e');
     }
   }
 

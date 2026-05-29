@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../models/order_model.dart';
 import '../../widgets/loading_indicator.dart';
 
@@ -27,7 +29,32 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final matchingOrders = orderProvider.orders.where((o) => o.id == widget.orderId);
     final order = matchingOrders.isNotEmpty ? matchingOrders.first : null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Order Tracking')),
+      appBar: AppBar(
+        title: const Text('Order Tracking'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+              return;
+            }
+            final role = Provider.of<AuthProvider>(context, listen: false).user?.role ?? '';
+            switch (role) {
+              case 'buyer':
+                context.go('/buyer-dashboard');
+                break;
+              case 'farmer':
+                context.go('/farmer-dashboard');
+                break;
+              case 'admin':
+                context.go('/admin-dashboard');
+                break;
+              default:
+                context.go('/login');
+            }
+          },
+        ),
+      ),
       body: orderProvider.isLoading
           ? const LoadingIndicator()
           : order == null
@@ -49,8 +76,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       const Text('Items:', style: TextStyle(fontWeight: FontWeight.bold)),
                       ...order.items.map((item) => ListTile(
                             title: Text(item.productName),
-                            subtitle: Text('Qty: ${item.quantity} x ₹${item.price}'),
-                            trailing: Text('₹${item.price * item.quantity}'),
+                            subtitle: Text('Qty: ${item.quantity} x ETB ${item.price}'),
+                            trailing: Text('ETB ${item.price * item.quantity}'),
                           )),
                     ],
                   ),
@@ -59,7 +86,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _buildTimeline(OrderStatus status) {
-    final statuses = OrderStatus.values;
+    const statuses = OrderStatus.values;
     final currentIndex = statuses.indexOf(status);
     return Column(
       children: [

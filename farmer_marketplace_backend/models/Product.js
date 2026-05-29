@@ -9,6 +9,8 @@ const ProductSchema = new mongoose.Schema({
   location: { type: String, required: true },
   images: [{ type: String }],
   description: String,
+  category: { type: String, enum: ['vegetables', 'fruits', 'grains', 'dairy', 'meat', 'other'], default: 'other' },
 }, { timestamps: true });
+
 
 module.exports = mongoose.model('Product', ProductSchema);
